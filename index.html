@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to Table Converter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden; /* Ensures rounded corners apply to table content */
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb; /* Light gray border */
+        }
+        th {
+            background-color: #f9fafb; /* Lighter background for header */
+            font-weight: 600;
+            color: #374151; /* Darker text for header */
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb; /* Zebra striping for rows */
+        }
+        tr:hover {
+            background-color: #f3f4f6; /* Hover effect */
+        }
+        .message-box {
+            background-color: #d1fae5; /* Light green for success */
+            color: #065f46; /* Dark green text */
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            border: 1px solid #a7f3d0;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container flex flex-col space-y-6">
+        <h1 class="text-3xl font-extrabold text-gray-900 text-center mb-6">CSV to Table Converter</h1>
+
+        <!-- Input Section -->
+        <div class="flex flex-col space-y-4">
+            <label for="csvInput" class="text-lg font-medium text-gray-700">Paste your CSV text here:</label>
+            <textarea id="csvInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out" placeholder="e.g., Name,Age,City&#10;Alice,30,New York&#10;Bob,24,London"></textarea>
+            <button id="convertBtn" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
+                Convert to Table
+            </button>
+        </div>
+
+        <!-- Message Box -->
+        <div id="messageBox" class="message-box"></div>
+
+        <!-- Output Section -->
+        <div id="tableOutput" class="overflow-x-auto">
+            <!-- Table will be rendered here -->
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mt-6">
+            <button id="downloadCsvBtn" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-200 ease-in-out" disabled>
+                Download CSV
+            </button>
+            <button id="copyTableBtn" class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-200 ease-in-out" disabled>
+                Copy Table Data
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const csvInput = document.getElementById('csvInput');
+            const convertBtn = document.getElementById('convertBtn');
+            const tableOutput = document.getElementById('tableOutput');
+            const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+            const copyTableBtn = document.getElementById('copyTableBtn');
+            const messageBox = document.getElementById('messageBox');
+
+            let currentTableData = []; // Store parsed data for download/copy
+
+            /**
+             * Displays a message in the message box.
+             * @param {string} message - The message to display.
+             * @param {string} type - The type of message (e.g., 'success', 'error').
+             */
+            function showMessage(message, type = 'success') {
+                messageBox.textContent = message;
+                messageBox.style.display = 'block';
+                messageBox.className = 'message-box'; // Reset classes
+                if (type === 'success') {
+                    messageBox.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+                } else if (type === 'error') {
+                    messageBox.classList.add('bg-red-100', 'text-red-800', 'border-red-300');
+                }
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 3000); // Hide after 3 seconds
+            }
+
+            /**
+             * Parses CSV text into a 2D array.
+             * Handles quoted fields and newlines within fields.
+             * @param {string} csvText - The raw CSV string.
+             * @param {string} delimiter - The delimiter character (default: ',').
+             * @returns {Array<Array<string>>} - A 2D array of parsed data.
+             */
+            function parseCSV(csvText, delimiter = ',') {
+                const rows = [];
+                let inQuote = false;
+                let currentRow = [];
+                let currentField = '';
+
+                for (let i = 0; i < csvText.length; i++) {
+                    const char = csvText[i];
+                    const nextChar = csvText[i + 1];
+
+                    if (char === '"') {
+                        if (inQuote && nextChar === '"') {
+                            // Escaped quote: "" becomes "
+                            currentField += '"';
+                            i++; // Skip the next quote
+                        } else {
+                            inQuote = !inQuote;
+                        }
+                    } else if (char === delimiter && !inQuote) {
+                        currentRow.push(currentField.trim());
+                        currentField = '';
+                    } else if (char === '\n' && !inQuote) {
+                        // Handle Windows newlines (\r\n)
+                        if (i > 0 && csvText[i - 1] === '\r') {
+                            // Do nothing, already handled by previous char or ignore \r
+                        } else {
+                            currentRow.push(currentField.trim());
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentField = '';
+                        }
+                    } else if (char === '\r' && !inQuote) {
+                        // Handle Windows newlines (\r\n)
+                        if (nextChar === '\n') {
+                            currentRow.push(currentField.trim());
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentField = '';
+                            i++; // Skip the next \n
+                        } else {
+                            // If it's just a \r, treat as a newline
+                            currentRow.push(currentField.trim());
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentField = '';
+                        }
+                    } else {
+                        currentField += char;
+                    }
+                }
+
+                // Add the last field and row if not empty
+                currentRow.push(currentField.trim());
+                if (currentRow.some(field => field.length > 0)) { // Only add if at least one field has content
+                    rows.push(currentRow);
+                }
+
+                // Filter out empty rows that might result from trailing newlines
+                return rows.filter(row => row.length > 0 && row.some(cell => cell.trim() !== ''));
+            }
+
+            /**
+             * Renders a 2D array of data into an HTML table.
+             * @param {Array<Array<string>>} data - The 2D array of table data.
+             */
+            function renderTable(data) {
+                tableOutput.innerHTML = ''; // Clear previous table
+
+                if (data.length === 0) {
+                    tableOutput.innerHTML = '<p class="text-gray-600 text-center mt-4">No data to display. Please paste valid CSV text.</p>';
+                    downloadCsvBtn.disabled = true;
+                    copyTableBtn.disabled = true;
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.classList.add('min-w-full', 'bg-white', 'shadow-md', 'rounded-lg');
+
+                // Create table header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                data[0].forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    th.classList.add('py-3', 'px-4', 'font-semibold', 'uppercase', 'text-sm', 'text-gray-600', 'bg-gray-100', 'border-b', 'border-gray-200');
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                // Create table body
+                const tbody = document.createElement('tbody');
+                for (let i = 1; i < data.length; i++) {
+                    const rowData = data[i];
+                    const tr = document.createElement('tr');
+                    rowData.forEach(cellData => {
+                        const td = document.createElement('td');
+                        td.textContent = cellData;
+                        td.classList.add('py-3', 'px-4', 'border-b', 'border-gray-200', 'text-gray-800');
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                }
+                table.appendChild(tbody);
+                tableOutput.appendChild(table);
+
+                downloadCsvBtn.disabled = false;
+                copyTableBtn.disabled = false;
+            }
+
+            /**
+             * Converts a 2D array back to a CSV string.
+             * Handles quoting fields that contain commas, quotes, or newlines.
+             * @param {Array<Array<string>>} data - The 2D array of table data.
+             * @returns {string} - The CSV string.
+             */
+            function convertToCSV(data) {
+                return data.map(row => {
+                    return row.map(field => {
+                        // If field contains comma, double quote, or newline, wrap it in double quotes
+                        if (field.includes(',') || field.includes('"') || field.includes('\n') || field.includes('\r')) {
+                            // Escape double quotes by doubling them
+                            const escapedField = field.replace(/"/g, '""');
+                            return `"${escapedField}"`;
+                        }
+                        return field;
+                    }).join(',');
+                }).join('\n');
+            }
+
+            /**
+             * Handles the "Convert to Table" button click.
+             */
+            convertBtn.addEventListener('click', () => {
+                const csvText = csvInput.value.trim();
+                if (!csvText) {
+                    showMessage('Please paste some CSV text to convert.', 'error');
+                    tableOutput.innerHTML = '';
+                    downloadCsvBtn.disabled = true;
+                    copyTableBtn.disabled = true;
+                    return;
+                }
+                currentTableData = parseCSV(csvText);
+                renderTable(currentTableData);
+            });
+
+            /**
+             * Handles the "Download CSV" button click.
+             */
+            downloadCsvBtn.addEventListener('click', () => {
+                if (currentTableData.length === 0) {
+                    showMessage('No data to download. Please convert CSV first.', 'error');
+                    return;
+                }
+                const csvString = convertToCSV(currentTableData);
+                const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', 'data.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('CSV file downloaded successfully!');
+            });
+
+            /**
+             * Handles the "Copy Table Data" button click.
+             */
+            copyTableBtn.addEventListener('click', () => {
+                if (currentTableData.length === 0) {
+                    showMessage('No data to copy. Please convert CSV first.', 'error');
+                    return;
+                }
+
+                // Option 1: Copy the original CSV text (simpler, preserves original formatting)
+                const textToCopy = csvInput.value;
+
+                // Option 2: Copy the rendered table text (more complex, might lose original CSV nuances)
+                // let textToCopy = '';
+                // const tableElement = tableOutput.querySelector('table');
+                // if (tableElement) {
+                //     textToCopy = Array.from(tableElement.querySelectorAll('tr'))
+                //         .map(row => Array.from(row.querySelectorAll('th, td')).map(cell => cell.textContent).join('\t')) // Use tab for easier pasting into spreadsheets
+                //         .join('\n');
+                // } else {
+                //     textToCopy = convertToCSV(currentTableData); // Fallback to CSV string
+                // }
+
+                try {
+                    // Use document.execCommand for better compatibility in iframes
+                    const textArea = document.createElement('textarea');
+                    textArea.value = textToCopy;
+                    textArea.style.position = 'fixed'; // Prevent scrolling to bottom of page
+                    textArea.style.left = '-9999px'; // Move off-screen
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showMessage('Table data copied to clipboard!');
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    showMessage('Failed to copy data. Please try manually.', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
