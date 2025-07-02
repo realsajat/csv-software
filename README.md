@@ -15,4 +15,4 @@ A simple tool for working with CSV files.
 2. Open `index.html` in your browser.
 
 ## License
-MIT
+SM SUPPORTS
