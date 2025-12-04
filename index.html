@@ -3,341 +3,1460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV to Table Converter</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>CSV to HTML Table Converter v2.0</title>
+    
+    <!-- ============================================
+         STYLES - Modern, Clean Sans-Serif Design
+         ============================================ -->
     <style>
+        /* ===========================================
+           CSS RESET & BASE STYLES
+           =========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Color palette for easy customization */
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            
+            /* Selection colors for Excel-like functionality */
+            --selection-row-bg: #dbeafe;      /* Light blue for row selection */
+            --selection-col-bg: #e0e7ff;      /* Light indigo for column selection */
+            --selection-cell-bg: #c7d2fe;     /* Darker for intersection */
+            
+            /* Neutral colors */
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --header-bg: #f9fafb;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top for better content flow */
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 
+                         'Ubuntu', 'Cantarell', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
             min-height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 24px;
         }
+
+        /* ===========================================
+           MAIN CONTAINER
+           =========================================== */
         .container {
-            background-color: #ffffff;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
             padding: 32px;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            width: 100%;
-            max-width: 900px;
-            box-sizing: border-box;
         }
+
+        /* ===========================================
+           HEADER SECTION
+           =========================================== */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .header .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ===========================================
+           INPUT SECTION
+           =========================================== */
+        .input-section {
+            margin-bottom: 24px;
+        }
+
+        .input-section label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .textarea-wrapper {
+            position: relative;
+        }
+
         textarea {
-            min-height: 150px;
+            width: 100%;
+            min-height: 180px;
+            padding: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
             resize: vertical;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        /* ===========================================
+           CONTROLS SECTION
+           =========================================== */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+
+        .controls-left {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .controls-right {
+            margin-left: auto;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* Button base styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: #059669;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: #dc2626;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        /* ===========================================
+           SEARCH INPUT
+           =========================================== */
+        .search-container {
+            position: relative;
+            flex-grow: 1;
+            max-width: 350px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        /* ===========================================
+           HELP TOOLTIP
+           =========================================== */
+        .help-text {
+            background-color: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+            color: #92400e;
+            display: none; /* Hidden by default, shown when table exists */
+        }
+
+        .help-text.visible {
+            display: block;
+        }
+
+        .help-text strong {
+            font-weight: 600;
+        }
+
+        /* ===========================================
+           TABLE CONTAINER
+           =========================================== */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            margin-top: 8px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            border-radius: 8px;
-            overflow: hidden; /* Ensures rounded corners apply to table content */
+            font-size: 0.95rem;
         }
-        th, td {
-            padding: 12px 15px;
+
+        /* Table header styles */
+        thead th {
+            background-color: var(--header-bg);
+            padding: 16px;
             text-align: left;
-            border-bottom: 1px solid #e5e7eb; /* Light gray border */
-        }
-        th {
-            background-color: #f9fafb; /* Lighter background for header */
             font-weight: 600;
-            color: #374151; /* Darker text for header */
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+            user-select: none;
+            white-space: nowrap;
         }
-        tr:nth-child(even) {
-            background-color: #f9fafb; /* Zebra striping for rows */
+
+        /* Sortable header styling */
+        thead th.sortable {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
-        tr:hover {
-            background-color: #f3f4f6; /* Hover effect */
+
+        thead th.sortable:hover {
+            background-color: #f0f0f0;
         }
-        .message-box {
-            background-color: #d1fae5; /* Light green for success */
-            color: #065f46; /* Dark green text */
-            padding: 12px;
+
+        /* Sort indicator arrows */
+        .sort-indicator {
+            margin-left: 8px;
+            font-size: 0.75rem;
+            opacity: 0.4;
+            transition: opacity 0.2s ease;
+        }
+
+        thead th.sort-asc .sort-indicator,
+        thead th.sort-desc .sort-indicator {
+            opacity: 1;
+        }
+
+        thead th.sort-asc .sort-indicator::after {
+            content: '▲';
+        }
+
+        thead th.sort-desc .sort-indicator::after {
+            content: '▼';
+        }
+
+        thead th:not(.sort-asc):not(.sort-desc) .sort-indicator::after {
+            content: '⇅';
+        }
+
+        /* Table body styles */
+        tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: background-color 0.15s ease;
+        }
+
+        /* Zebra striping */
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        /* Row hover effect */
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* ===========================================
+           EXCEL-LIKE SELECTION STYLES
+           =========================================== */
+        
+        /* Row selection - entire row gets highlighted */
+        tbody tr.selected-row {
+            background-color: var(--selection-row-bg) !important;
+        }
+
+        tbody tr.selected-row td {
+            background-color: var(--selection-row-bg);
+        }
+
+        /* Column selection - cells in selected column */
+        td.selected-col,
+        th.selected-col {
+            background-color: var(--selection-col-bg) !important;
+        }
+
+        /* When both row and column are selected (intersection) */
+        tbody tr.selected-row td.selected-col {
+            background-color: var(--selection-cell-bg) !important;
+        }
+
+        /* Column header when selected */
+        th.selected-col {
+            background-color: var(--selection-col-bg) !important;
+            box-shadow: inset 0 -3px 0 var(--primary-color);
+        }
+
+        /* Clickable cells cursor */
+        tbody td {
+            cursor: pointer;
+        }
+
+        /* ===========================================
+           STATUS & MESSAGE SECTION
+           =========================================== */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: var(--header-bg);
             border-radius: 8px;
             margin-top: 16px;
-            border: 1px solid #a7f3d0;
-            display: none; /* Hidden by default */
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .status-left {
+            display: flex;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-item strong {
+            color: var(--text-primary);
+        }
+
+        /* Message/Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background-color: var(--text-primary);
+            color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            font-size: 0.95rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background-color: var(--success-color);
+        }
+
+        .toast.error {
+            background-color: var(--danger-color);
+        }
+
+        /* ===========================================
+           NO DATA MESSAGE
+           =========================================== */
+        .no-data {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+        }
+
+        .no-data svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .no-data p {
+            font-size: 1.1rem;
+        }
+
+        /* ===========================================
+           RESPONSIVE DESIGN
+           =========================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls-left,
+            .controls-right {
+                flex-direction: column;
+            }
+
+            .controls-right {
+                margin-left: 0;
+            }
+
+            .search-container {
+                max-width: 100%;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        /* Hidden utility class */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
-<body class="antialiased">
-    <div class="container flex flex-col space-y-6">
-        <h1 class="text-3xl font-extrabold text-gray-900 text-center mb-6">CSV to Table Converter</h1>
+<body>
 
-        <!-- Input Section -->
-        <div class="flex flex-col space-y-4">
-            <label for="csvInput" class="text-lg font-medium text-gray-700">Paste your CSV text here:</label>
-            <textarea id="csvInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out" placeholder="e.g., Name,Age,City&#10;Alice,30,New York&#10;Bob,24,London"></textarea>
-            <button id="convertBtn" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
-                Convert to Table
-            </button>
+    <!-- ============================================
+         MAIN APPLICATION CONTAINER
+         ============================================ -->
+    <div class="container">
+        
+        <!-- Header Section -->
+        <div class="header">
+            <h1>CSV to HTML Table Converter <span class="version-badge">v2.0</span></h1>
+            <p>Paste your CSV data below to convert it into an interactive, sortable table</p>
         </div>
 
-        <!-- Message Box -->
-        <div id="messageBox" class="message-box"></div>
-
-        <!-- Output Section -->
-        <div id="tableOutput" class="overflow-x-auto">
-            <!-- Table will be rendered here -->
+        <!-- CSV Input Section -->
+        <div class="input-section">
+            <label for="csvInput">📋 Paste your CSV data here:</label>
+            <div class="textarea-wrapper">
+                <textarea 
+                    id="csvInput" 
+                    placeholder="Example:
+Name,Age,City,Department
+Alice Johnson,28,New York,Engineering
+Bob Smith,35,Los Angeles,Marketing
+&quot;Carol, Ann&quot;,42,Chicago,&quot;Sales &amp; Support&quot;
+David Lee,31,Houston,Engineering"></textarea>
+            </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mt-6">
-            <button id="downloadCsvBtn" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-200 ease-in-out" disabled>
-                Download CSV
-            </button>
-            <button id="copyTableBtn" class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-200 ease-in-out" disabled>
-                Copy Table Data
-            </button>
+        <!-- Control Buttons Section -->
+        <div class="controls">
+            <div class="controls-left">
+                <!-- Convert Button -->
+                <button id="convertBtn" class="btn btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="4,14 10,14 10,20"></polyline>
+                        <polyline points="20,10 14,10 14,4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    Convert to Table
+                </button>
+
+                <!-- Clear Button -->
+                <button id="clearBtn" class="btn btn-outline">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3,6 5,6 21,6"></polyline>
+                        <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                    </svg>
+                    Clear All
+                </button>
+
+                <!-- Clear Selection Button -->
+                <button id="clearSelectionBtn" class="btn btn-outline hidden">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                    </svg>
+                    Clear Selection
+                </button>
+            </div>
+
+            <div class="controls-right">
+                <!-- Search/Filter Input -->
+                <div class="search-container">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Search table..."
+                        disabled
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Text for Selection Feature -->
+        <div id="helpText" class="help-text">
+            <strong>💡 Tip:</strong> Click any cell to select its row. 
+            <strong>Ctrl+Click</strong> (or <strong>⌘+Click</strong> on Mac) on a column header to select the entire column.
+        </div>
+
+        <!-- Table Output Container -->
+        <div id="tableOutput">
+            <!-- Dynamically generated table will appear here -->
+            <div class="no-data">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <p>Paste CSV data and click "Convert to Table" to get started</p>
+            </div>
+        </div>
+
+        <!-- Status Bar (shown after table is generated) -->
+        <div id="statusBar" class="status-bar hidden">
+            <div class="status-left">
+                <span class="status-item">
+                    📊 <strong id="rowCount">0</strong> rows
+                </span>
+                <span class="status-item">
+                    📏 <strong id="colCount">0</strong> columns
+                </span>
+                <span class="status-item" id="filteredStatus" class="hidden">
+                    🔍 Showing <strong id="visibleCount">0</strong> of <strong id="totalCount">0</strong>
+                </span>
+            </div>
+            <div class="status-right">
+                <span class="status-item" id="selectionStatus">
+                    No selection
+                </span>
+            </div>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const csvInput = document.getElementById('csvInput');
-            const convertBtn = document.getElementById('convertBtn');
-            const tableOutput = document.getElementById('tableOutput');
-            const downloadCsvBtn = document.getElementById('downloadCsvBtn');
-            const copyTableBtn = document.getElementById('copyTableBtn');
-            const messageBox = document.getElementById('messageBox');
+    <!-- Toast Notification Container -->
+    <div id="toast" class="toast"></div>
 
-            let currentTableData = []; // Store parsed data for download/copy
+    <!-- ============================================
+         JAVASCRIPT - Core Application Logic
+         ============================================ -->
+    <script>
+        /**
+         * ===========================================
+         * CSV TO HTML TABLE CONVERTER v2.0
+         * ===========================================
+         * 
+         * Features:
+         * - Robust CSV parsing with quoted string support
+         * - Sortable columns (click header to toggle)
+         * - Real-time search/filter
+         * - Excel-like row and column selection
+         * - Clean, modular code structure
+         * 
+         * Author: Senior Frontend Developer
+         * Version: 2.0
+         */
+
+        (function() {
+            'use strict';
+
+            // ===========================================
+            // APPLICATION STATE
+            // ===========================================
+            
+            /**
+             * Central state object to track application data
+             * Using a single state object makes debugging and state management easier
+             */
+            const state = {
+                originalData: [],      // Parsed CSV data (2D array)
+                headers: [],           // Column headers
+                sortColumn: -1,        // Currently sorted column index (-1 = none)
+                sortDirection: 'none', // 'asc', 'desc', or 'none'
+                selectedRows: new Set(),    // Set of selected row indices
+                selectedCols: new Set(),    // Set of selected column indices
+                searchTerm: ''         // Current search/filter term
+            };
+
+            // ===========================================
+            // DOM ELEMENT REFERENCES
+            // ===========================================
+            
+            /**
+             * Cache DOM element references for better performance
+             * Avoids repeated querySelector calls during event handling
+             */
+            const elements = {
+                csvInput: document.getElementById('csvInput'),
+                convertBtn: document.getElementById('convertBtn'),
+                clearBtn: document.getElementById('clearBtn'),
+                clearSelectionBtn: document.getElementById('clearSelectionBtn'),
+                searchInput: document.getElementById('searchInput'),
+                tableOutput: document.getElementById('tableOutput'),
+                statusBar: document.getElementById('statusBar'),
+                rowCount: document.getElementById('rowCount'),
+                colCount: document.getElementById('colCount'),
+                visibleCount: document.getElementById('visibleCount'),
+                totalCount: document.getElementById('totalCount'),
+                filteredStatus: document.getElementById('filteredStatus'),
+                selectionStatus: document.getElementById('selectionStatus'),
+                helpText: document.getElementById('helpText'),
+                toast: document.getElementById('toast')
+            };
+
+            // ===========================================
+            // UTILITY FUNCTIONS
+            // ===========================================
 
             /**
-             * Displays a message in the message box.
-             * @param {string} message - The message to display.
-             * @param {string} type - The type of message (e.g., 'success', 'error').
+             * Displays a toast notification message
+             * @param {string} message - The message to display
+             * @param {string} type - Message type: 'success', 'error', or 'info'
+             * @param {number} duration - How long to show the toast (ms)
              */
-            function showMessage(message, type = 'success') {
-                messageBox.textContent = message;
-                messageBox.style.display = 'block';
-                messageBox.className = 'message-box'; // Reset classes
-                if (type === 'success') {
-                    messageBox.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
-                } else if (type === 'error') {
-                    messageBox.classList.add('bg-red-100', 'text-red-800', 'border-red-300');
-                }
+            function showToast(message, type = 'info', duration = 3000) {
+                const toast = elements.toast;
+                toast.textContent = message;
+                toast.className = 'toast visible ' + type;
+                
+                // Auto-hide after duration
                 setTimeout(() => {
-                    messageBox.style.display = 'none';
-                }, 3000); // Hide after 3 seconds
+                    toast.classList.remove('visible');
+                }, duration);
             }
 
             /**
-             * Parses CSV text into a 2D array.
-             * Handles quoted fields and newlines within fields.
-             * @param {string} csvText - The raw CSV string.
-             * @param {string} delimiter - The delimiter character (default: ',').
-             * @returns {Array<Array<string>>} - A 2D array of parsed data.
+             * Escapes HTML characters to prevent XSS attacks
+             * Essential for displaying user-provided data safely
+             * @param {string} text - Text to escape
+             * @returns {string} - Escaped HTML string
+             */
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            /**
+             * Updates the status bar with current table statistics
+             */
+            function updateStatusBar() {
+                if (state.originalData.length === 0) {
+                    elements.statusBar.classList.add('hidden');
+                    return;
+                }
+
+                elements.statusBar.classList.remove('hidden');
+                elements.rowCount.textContent = state.originalData.length - 1; // Exclude header
+                elements.colCount.textContent = state.headers.length;
+
+                // Update selection status
+                updateSelectionStatus();
+            }
+
+            /**
+             * Updates the selection status text in the status bar
+             */
+            function updateSelectionStatus() {
+                const rowCount = state.selectedRows.size;
+                const colCount = state.selectedCols.size;
+                
+                let statusText = 'No selection';
+                
+                if (rowCount > 0 && colCount > 0) {
+                    statusText = `${rowCount} row(s) × ${colCount} column(s) selected`;
+                } else if (rowCount > 0) {
+                    statusText = `${rowCount} row(s) selected`;
+                } else if (colCount > 0) {
+                    statusText = `${colCount} column(s) selected`;
+                }
+
+                elements.selectionStatus.textContent = statusText;
+                
+                // Show/hide clear selection button
+                if (rowCount > 0 || colCount > 0) {
+                    elements.clearSelectionBtn.classList.remove('hidden');
+                } else {
+                    elements.clearSelectionBtn.classList.add('hidden');
+                }
+            }
+
+            // ===========================================
+            // CSV PARSING LOGIC
+            // ===========================================
+
+            /**
+             * Parses CSV text into a 2D array
+             * 
+             * This parser handles:
+             * - Commas inside quoted strings
+             * - Escaped quotes ("" becomes ")
+             * - Mixed line endings (CRLF, LF, CR)
+             * - Empty fields
+             * - Trailing newlines
+             * 
+             * @param {string} csvText - Raw CSV string input
+             * @param {string} delimiter - Field delimiter (default: comma)
+             * @returns {Array<Array<string>>} - 2D array of parsed values
              */
             function parseCSV(csvText, delimiter = ',') {
                 const rows = [];
-                let inQuote = false;
                 let currentRow = [];
                 let currentField = '';
-
+                let inQuotes = false;
+                
+                // Process each character in the CSV text
                 for (let i = 0; i < csvText.length; i++) {
                     const char = csvText[i];
                     const nextChar = csvText[i + 1];
 
+                    // Handle quote characters
                     if (char === '"') {
-                        if (inQuote && nextChar === '"') {
-                            // Escaped quote: "" becomes "
+                        if (inQuotes && nextChar === '"') {
+                            // Escaped quote: "" becomes a literal "
                             currentField += '"';
                             i++; // Skip the next quote
                         } else {
-                            inQuote = !inQuote;
+                            // Toggle quote state
+                            inQuotes = !inQuotes;
                         }
-                    } else if (char === delimiter && !inQuote) {
+                    }
+                    // Handle delimiter (comma by default)
+                    else if (char === delimiter && !inQuotes) {
                         currentRow.push(currentField.trim());
                         currentField = '';
-                    } else if (char === '\n' && !inQuote) {
-                        // Handle Windows newlines (\r\n)
-                        if (i > 0 && csvText[i - 1] === '\r') {
-                            // Do nothing, already handled by previous char or ignore \r
-                        } else {
-                            currentRow.push(currentField.trim());
-                            rows.push(currentRow);
-                            currentRow = [];
-                            currentField = '';
+                    }
+                    // Handle line endings
+                    else if ((char === '\n' || char === '\r') && !inQuotes) {
+                        // Handle Windows-style CRLF
+                        if (char === '\r' && nextChar === '\n') {
+                            i++; // Skip the \n
                         }
-                    } else if (char === '\r' && !inQuote) {
-                        // Handle Windows newlines (\r\n)
-                        if (nextChar === '\n') {
-                            currentRow.push(currentField.trim());
+                        
+                        // Push the current field and row
+                        currentRow.push(currentField.trim());
+                        
+                        // Only add non-empty rows
+                        if (currentRow.some(field => field !== '')) {
                             rows.push(currentRow);
-                            currentRow = [];
-                            currentField = '';
-                            i++; // Skip the next \n
-                        } else {
-                            // If it's just a \r, treat as a newline
-                            currentRow.push(currentField.trim());
-                            rows.push(currentRow);
-                            currentRow = [];
-                            currentField = '';
                         }
-                    } else {
+                        
+                        currentRow = [];
+                        currentField = '';
+                    }
+                    // Regular character - add to current field
+                    else {
                         currentField += char;
                     }
                 }
 
-                // Add the last field and row if not empty
-                currentRow.push(currentField.trim());
-                if (currentRow.some(field => field.length > 0)) { // Only add if at least one field has content
-                    rows.push(currentRow);
+                // Handle the last field (no newline at end of file)
+                if (currentField !== '' || currentRow.length > 0) {
+                    currentRow.push(currentField.trim());
+                    if (currentRow.some(field => field !== '')) {
+                        rows.push(currentRow);
+                    }
                 }
 
-                // Filter out empty rows that might result from trailing newlines
-                return rows.filter(row => row.length > 0 && row.some(cell => cell.trim() !== ''));
+                return rows;
             }
 
+            // ===========================================
+            // TABLE RENDERING
+            // ===========================================
+
             /**
-             * Renders a 2D array of data into an HTML table.
-             * @param {Array<Array<string>>} data - The 2D array of table data.
+             * Renders the parsed CSV data as an HTML table
+             * Creates all DOM elements dynamically with proper event listeners
+             * 
+             * @param {Array<Array<string>>} data - 2D array of table data
              */
             function renderTable(data) {
-                tableOutput.innerHTML = ''; // Clear previous table
+                // Clear previous content
+                elements.tableOutput.innerHTML = '';
 
-                if (data.length === 0) {
-                    tableOutput.innerHTML = '<p class="text-gray-600 text-center mt-4">No data to display. Please paste valid CSV text.</p>';
-                    downloadCsvBtn.disabled = true;
-                    copyTableBtn.disabled = true;
+                // Validate data
+                if (!data || data.length === 0) {
+                    elements.tableOutput.innerHTML = `
+                        <div class="no-data">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <p>No valid data found. Please check your CSV format.</p>
+                        </div>
+                    `;
                     return;
                 }
 
-                const table = document.createElement('table');
-                table.classList.add('min-w-full', 'bg-white', 'shadow-md', 'rounded-lg');
+                // Store headers for reference
+                state.headers = data[0];
 
-                // Create table header
+                // Create table container
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
+
+                // Create table element
+                const table = document.createElement('table');
+                table.id = 'dataTable';
+
+                // ===========================================
+                // CREATE TABLE HEADER
+                // ===========================================
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
-                data[0].forEach(headerText => {
+
+                data[0].forEach((headerText, colIndex) => {
                     const th = document.createElement('th');
-                    th.textContent = headerText;
-                    th.classList.add('py-3', 'px-4', 'font-semibold', 'uppercase', 'text-sm', 'text-gray-600', 'bg-gray-100', 'border-b', 'border-gray-200');
+                    th.className = 'sortable';
+                    th.dataset.colIndex = colIndex;
+                    
+                    // Header content with sort indicator
+                    th.innerHTML = `
+                        ${escapeHtml(headerText)}
+                        <span class="sort-indicator"></span>
+                    `;
+
+                    // ===========================================
+                    // HEADER CLICK HANDLER
+                    // Handles both sorting and column selection
+                    // ===========================================
+                    th.addEventListener('click', (event) => {
+                        handleHeaderClick(event, colIndex);
+                    });
+
                     headerRow.appendChild(th);
                 });
+
                 thead.appendChild(headerRow);
                 table.appendChild(thead);
 
-                // Create table body
+                // ===========================================
+                // CREATE TABLE BODY
+                // ===========================================
                 const tbody = document.createElement('tbody');
-                for (let i = 1; i < data.length; i++) {
-                    const rowData = data[i];
+
+                // Skip header row (index 0), render data rows
+                for (let rowIndex = 1; rowIndex < data.length; rowIndex++) {
                     const tr = document.createElement('tr');
-                    rowData.forEach(cellData => {
+                    tr.dataset.rowIndex = rowIndex;
+
+                    // Create cells for each column
+                    data[rowIndex].forEach((cellData, colIndex) => {
                         const td = document.createElement('td');
+                        td.dataset.colIndex = colIndex;
                         td.textContent = cellData;
-                        td.classList.add('py-3', 'px-4', 'border-b', 'border-gray-200', 'text-gray-800');
+
+                        // ===========================================
+                        // CELL CLICK HANDLER
+                        // Implements row selection on cell click
+                        // ===========================================
+                        td.addEventListener('click', (event) => {
+                            handleCellClick(event, rowIndex, colIndex);
+                        });
+
                         tr.appendChild(td);
                     });
+
                     tbody.appendChild(tr);
                 }
+
                 table.appendChild(tbody);
-                tableOutput.appendChild(table);
+                tableContainer.appendChild(table);
+                elements.tableOutput.appendChild(tableContainer);
 
-                downloadCsvBtn.disabled = false;
-                copyTableBtn.disabled = false;
+                // Show help text and enable search
+                elements.helpText.classList.add('visible');
+                elements.searchInput.disabled = false;
+                
+                // Update status bar
+                updateStatusBar();
+            }
+
+            // ===========================================
+            // SORTING LOGIC
+            // ===========================================
+
+            /**
+             * Handles header click for sorting
+             * Normal click = sort, Ctrl/Cmd+click = column selection
+             * 
+             * @param {Event} event - Click event
+             * @param {number} colIndex - Column index that was clicked
+             */
+            function handleHeaderClick(event, colIndex) {
+                // Check for modifier key (Ctrl or Cmd on Mac)
+                if (event.ctrlKey || event.metaKey) {
+                    // Column selection mode
+                    toggleColumnSelection(colIndex);
+                } else {
+                    // Sorting mode
+                    sortByColumn(colIndex);
+                }
             }
 
             /**
-             * Converts a 2D array back to a CSV string.
-             * Handles quoting fields that contain commas, quotes, or newlines.
-             * @param {Array<Array<string>>} data - The 2D array of table data.
-             * @returns {string} - The CSV string.
+             * Sorts the table by the specified column
+             * Toggles between ascending and descending order
+             * 
+             * @param {number} colIndex - Column index to sort by
              */
-            function convertToCSV(data) {
-                return data.map(row => {
-                    return row.map(field => {
-                        // If field contains comma, double quote, or newline, wrap it in double quotes
-                        if (field.includes(',') || field.includes('"') || field.includes('\n') || field.includes('\r')) {
-                            // Escape double quotes by doubling them
-                            const escapedField = field.replace(/"/g, '""');
-                            return `"${escapedField}"`;
+            function sortByColumn(colIndex) {
+                // Determine new sort direction
+                if (state.sortColumn === colIndex) {
+                    // Same column - toggle direction
+                    state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    // New column - start with ascending
+                    state.sortColumn = colIndex;
+                    state.sortDirection = 'asc';
+                }
+
+                // Get data rows (exclude header)
+                const dataRows = state.originalData.slice(1);
+
+                // Sort the data
+                dataRows.sort((a, b) => {
+                    const valA = a[colIndex] || '';
+                    const valB = b[colIndex] || '';
+
+                    // Try numeric comparison first
+                    const numA = parseFloat(valA);
+                    const numB = parseFloat(valB);
+
+                    let comparison;
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        // Numeric comparison
+                        comparison = numA - numB;
+                    } else {
+                        // String comparison (case-insensitive)
+                        comparison = valA.toLowerCase().localeCompare(valB.toLowerCase());
+                    }
+
+                    // Apply sort direction
+                    return state.sortDirection === 'asc' ? comparison : -comparison;
+                });
+
+                // Reconstruct data with header
+                state.originalData = [state.originalData[0], ...dataRows];
+
+                // Re-render table
+                renderTable(state.originalData);
+
+                // Update header styling to show sort state
+                updateSortIndicators(colIndex);
+
+                // Reapply search filter if active
+                if (state.searchTerm) {
+                    filterTable(state.searchTerm);
+                }
+
+                // Reapply selection states
+                reapplySelections();
+
+                showToast(`Sorted by "${state.headers[colIndex]}" (${state.sortDirection === 'asc' ? '↑ ascending' : '↓ descending'})`, 'success');
+            }
+
+            /**
+             * Updates the visual sort indicators on table headers
+             * 
+             * @param {number} activeColIndex - The currently sorted column
+             */
+            function updateSortIndicators(activeColIndex) {
+                const headers = document.querySelectorAll('#dataTable thead th');
+                
+                headers.forEach((th, index) => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    
+                    if (index === activeColIndex) {
+                        th.classList.add(state.sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                });
+            }
+
+            // ===========================================
+            // SEARCH/FILTER LOGIC
+            // ===========================================
+
+            /**
+             * Filters table rows based on search term
+             * Hides rows that don't contain the search term in any cell
+             * 
+             * @param {string} searchTerm - The text to search for
+             */
+            function filterTable(searchTerm) {
+                state.searchTerm = searchTerm.toLowerCase();
+                const tbody = document.querySelector('#dataTable tbody');
+                
+                if (!tbody) return;
+
+                const rows = tbody.querySelectorAll('tr');
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const rowText = Array.from(cells)
+                        .map(cell => cell.textContent.toLowerCase())
+                        .join(' ');
+
+                    // Check if any cell contains the search term
+                    if (rowText.includes(state.searchTerm)) {
+                        row.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        row.classList.add('hidden');
+                    }
+                });
+
+                // Update filtered status
+                const totalRows = rows.length;
+                if (state.searchTerm) {
+                    elements.filteredStatus.classList.remove('hidden');
+                    elements.visibleCount.textContent = visibleCount;
+                    elements.totalCount.textContent = totalRows;
+                } else {
+                    elements.filteredStatus.classList.add('hidden');
+                }
+            }
+
+            // ===========================================
+            // EXCEL-LIKE SELECTION LOGIC
+            // ===========================================
+
+            /**
+             * Handles cell click for row selection
+             * Clicking a cell selects/deselects the entire row
+             * 
+             * @param {Event} event - Click event
+             * @param {number} rowIndex - Row index (1-based, 0 is header)
+             * @param {number} colIndex - Column index
+             */
+            function handleCellClick(event, rowIndex, colIndex) {
+                // Prevent text selection on rapid clicks
+                event.preventDefault();
+
+                const isShiftKey = event.shiftKey;
+                const isCtrlKey = event.ctrlKey || event.metaKey;
+
+                if (isCtrlKey) {
+                    // Ctrl+Click on cell: toggle individual row
+                    toggleRowSelection(rowIndex);
+                } else if (isShiftKey && state.selectedRows.size > 0) {
+                    // Shift+Click: select range of rows
+                    selectRowRange(rowIndex);
+                } else {
+                    // Normal click: select single row (clear others)
+                    clearRowSelection();
+                    toggleRowSelection(rowIndex);
+                }
+            }
+
+            /**
+             * Toggles selection state for a single row
+             * 
+             * @param {number} rowIndex - Row index to toggle
+             */
+            function toggleRowSelection(rowIndex) {
+                if (state.selectedRows.has(rowIndex)) {
+                    state.selectedRows.delete(rowIndex);
+                } else {
+                    state.selectedRows.add(rowIndex);
+                }
+                
+                applyRowSelection();
+                updateSelectionStatus();
+            }
+
+            /**
+             * Selects a range of rows from the last selected row to the target
+             * 
+             * @param {number} targetRowIndex - The end row of the range
+             */
+            function selectRowRange(targetRowIndex) {
+                // Find the last selected row
+                const selectedArray = Array.from(state.selectedRows);
+                const lastSelected = selectedArray[selectedArray.length - 1] || 1;
+
+                // Determine range
+                const start = Math.min(lastSelected, targetRowIndex);
+                const end = Math.max(lastSelected, targetRowIndex);
+
+                // Select all rows in range
+                for (let i = start; i <= end; i++) {
+                    state.selectedRows.add(i);
+                }
+
+                applyRowSelection();
+                updateSelectionStatus();
+            }
+
+            /**
+             * Clears all row selections
+             */
+            function clearRowSelection() {
+                state.selectedRows.clear();
+                applyRowSelection();
+            }
+
+            /**
+             * Applies visual highlighting to selected rows
+             */
+            function applyRowSelection() {
+                const tbody = document.querySelector('#dataTable tbody');
+                if (!tbody) return;
+
+                const rows = tbody.querySelectorAll('tr');
+                
+                rows.forEach(row => {
+                    const rowIndex = parseInt(row.dataset.rowIndex);
+                    
+                    if (state.selectedRows.has(rowIndex)) {
+                        row.classList.add('selected-row');
+                    } else {
+                        row.classList.remove('selected-row');
+                    }
+                });
+            }
+
+            /**
+             * Toggles selection state for a column
+             * 
+             * @param {number} colIndex - Column index to toggle
+             */
+            function toggleColumnSelection(colIndex) {
+                if (state.selectedCols.has(colIndex)) {
+                    state.selectedCols.delete(colIndex);
+                } else {
+                    state.selectedCols.add(colIndex);
+                }
+
+                applyColumnSelection();
+                updateSelectionStatus();
+            }
+
+            /**
+             * Applies visual highlighting to selected columns
+             */
+            function applyColumnSelection() {
+                const table = document.querySelector('#dataTable');
+                if (!table) return;
+
+                // Get all header cells
+                const headers = table.querySelectorAll('thead th');
+                headers.forEach((th, index) => {
+                    if (state.selectedCols.has(index)) {
+                        th.classList.add('selected-col');
+                    } else {
+                        th.classList.remove('selected-col');
+                    }
+                });
+
+                // Get all body cells and apply column selection
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach((td, index) => {
+                        if (state.selectedCols.has(index)) {
+                            td.classList.add('selected-col');
+                        } else {
+                            td.classList.remove('selected-col');
                         }
-                        return field;
-                    }).join(',');
-                }).join('\n');
+                    });
+                });
             }
 
             /**
-             * Handles the "Convert to Table" button click.
+             * Clears all column selections
              */
-            convertBtn.addEventListener('click', () => {
-                const csvText = csvInput.value.trim();
-                if (!csvText) {
-                    showMessage('Please paste some CSV text to convert.', 'error');
-                    tableOutput.innerHTML = '';
-                    downloadCsvBtn.disabled = true;
-                    copyTableBtn.disabled = true;
-                    return;
-                }
-                currentTableData = parseCSV(csvText);
-                renderTable(currentTableData);
-            });
+            function clearColumnSelection() {
+                state.selectedCols.clear();
+                applyColumnSelection();
+            }
 
             /**
-             * Handles the "Download CSV" button click.
+             * Clears all selections (rows and columns)
              */
-            downloadCsvBtn.addEventListener('click', () => {
-                if (currentTableData.length === 0) {
-                    showMessage('No data to download. Please convert CSV first.', 'error');
-                    return;
-                }
-                const csvString = convertToCSV(currentTableData);
-                const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.setAttribute('download', 'data.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showMessage('CSV file downloaded successfully!');
-            });
+            function clearAllSelections() {
+                state.selectedRows.clear();
+                state.selectedCols.clear();
+                applyRowSelection();
+                applyColumnSelection();
+                updateSelectionStatus();
+            }
 
             /**
-             * Handles the "Copy Table Data" button click.
+             * Reapplies all current selections after table re-render
              */
-            copyTableBtn.addEventListener('click', () => {
-                if (currentTableData.length === 0) {
-                    showMessage('No data to copy. Please convert CSV first.', 'error');
-                    return;
-                }
+            function reapplySelections() {
+                applyRowSelection();
+                applyColumnSelection();
+                updateSelectionStatus();
+            }
 
-                // Option 1: Copy the original CSV text (simpler, preserves original formatting)
-                const textToCopy = csvInput.value;
+            // ===========================================
+            // CLEAR/RESET FUNCTIONALITY
+            // ===========================================
 
-                // Option 2: Copy the rendered table text (more complex, might lose original CSV nuances)
-                // let textToCopy = '';
-                // const tableElement = tableOutput.querySelector('table');
-                // if (tableElement) {
-                //     textToCopy = Array.from(tableElement.querySelectorAll('tr'))
-                //         .map(row => Array.from(row.querySelectorAll('th, td')).map(cell => cell.textContent).join('\t')) // Use tab for easier pasting into spreadsheets
-                //         .join('\n');
-                // } else {
-                //     textToCopy = convertToCSV(currentTableData); // Fallback to CSV string
-                // }
+            /**
+             * Resets the entire application to its initial state
+             */
+            function clearAll() {
+                // Reset state
+                state.originalData = [];
+                state.headers = [];
+                state.sortColumn = -1;
+                state.sortDirection = 'none';
+                state.selectedRows.clear();
+                state.selectedCols.clear();
+                state.searchTerm = '';
 
-                try {
-                    // Use document.execCommand for better compatibility in iframes
-                    const textArea = document.createElement('textarea');
-                    textArea.value = textToCopy;
-                    textArea.style.position = 'fixed'; // Prevent scrolling to bottom of page
-                    textArea.style.left = '-9999px'; // Move off-screen
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    showMessage('Table data copied to clipboard!');
-                } catch (err) {
-                    console.error('Failed to copy text: ', err);
-                    showMessage('Failed to copy data. Please try manually.', 'error');
-                }
-            });
-        });
+                // Reset UI
+                elements.csvInput.value = '';
+                elements.searchInput.value = '';
+                elements.searchInput.disabled = true;
+                elements.helpText.classList.remove('visible');
+                elements.statusBar.classList.add('hidden');
+                elements.clearSelectionBtn.classList.add('hidden');
+
+                // Reset table output to initial state
+                elements.tableOutput.innerHTML = `
+                    <div class="no-data">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <p>Paste CSV data and click "Convert to Table" to get started</p>
+                    </div>
+                `;
+
+                showToast('Cleared all data', 'success');
+            }
+
+            // ===========================================
+            // EVENT LISTENERS SETUP
+            // ===========================================
+
+            /**
+             * Initialize all event listeners
+             * Separating this into a function keeps the code organized
+             */
+            function initEventListeners() {
+                // Convert button click
+                elements.convertBtn.addEventListener('click', () => {
+                    const csvText = elements.csvInput.value.trim();
+                    
+                    if (!csvText) {
+                        showToast('Please paste some CSV data first', 'error');
+                        return;
+                    }
+
+                    // Parse and render
+                    state.originalData = parseCSV(csvText);
+                    
+                    if (state.originalData.length === 0) {
+                        showToast('No valid data found in CSV', 'error');
+                        return;
+                    }
+
+                    renderTable(state.originalData);
+                    showToast(`Table created with ${state.originalData.length - 1} rows`, 'success');
+                });
+
+                // Clear button click
+                elements.clearBtn.addEventListener('click', clearAll);
+
+                // Clear selection button click
+                elements.clearSelectionBtn.addEventListener('click', () => {
+                    clearAllSelections();
+                    showToast('Selection cleared', 'success');
+                });
+
+                // Search input - real-time filtering
+                elements.searchInput.addEventListener('input', (event) => {
+                    filterTable(event.target.value);
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (event) => {
+                    // Escape key clears selection
+                    if (event.key === 'Escape') {
+                        clearAllSelections();
+                    }
+                    
+                    // Ctrl+A selects all rows (when table has focus)
+                    if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+                        const tableExists = document.querySelector('#dataTable');
+                        if (tableExists && document.activeElement !== elements.csvInput && 
+                            document.activeElement !== elements.searchInput) {
+                            event.preventDefault();
+                            selectAllRows();
+                        }
+                    }
+                });
+            }
+
+            /**
+             * Selects all visible rows in the table
+             */
+            function selectAllRows() {
+                const tbody = document.querySelector('#dataTable tbody');
+                if (!tbody) return;
+
+                const rows = tbody.querySelectorAll('tr:not(.hidden)');
+                rows.forEach(row => {
+                    const rowIndex = parseInt(row.dataset.rowIndex);
+                    state.selectedRows.add(rowIndex);
+                });
+
+                applyRowSelection();
+                updateSelectionStatus();
+                showToast('All visible rows selected', 'success');
+            }
+
+            // ===========================================
+            // INITIALIZATION
+            // ===========================================
+
+            /**
+             * Initialize the application when DOM is ready
+             */
+            function init() {
+                initEventListeners();
+                console.log('CSV to HTML Table Converter v2.0 initialized');
+            }
+
+            // Start the application
+            init();
+
+        })();
     </script>
+
 </body>
 </html>
